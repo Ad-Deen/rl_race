@@ -47,7 +47,7 @@ class AutonomousDriveNode(Node):
         self.last_time_ = current_time
 
         twist = Twist()
-        twist.linear.x = 10.0  # Fixed speed
+        twist.linear.x = 7.0  # Fixed speed adjust based on stability
         twist.angular.z = -control  # Adjust steering based on PID control
         
         self.publisher_.publish(twist)
