@@ -68,15 +68,10 @@ class LidarOdomVisualizer(Node):
             (self.position.x - self.initial_position.x) ** 2 +
             (self.position.y - self.initial_position.y) ** 2
         )
-        # initial_theta = 2 * np.arctan2(self.initial_orientation.z, self.initial_orientation.w)
-        # current_theta = 2 * np.arctan2(self.orientation.z, self.orientation.w)
-        # orientation_diff = np.abs(current_theta - initial_theta)
 
         # Tolerances for considering the robot to be back at the initial pose
         position_tolerance = 5.0  # meters
-        # orientation_tolerance = 0.1  # radians
 
-        # return distance < position_tolerance and orientation_diff < orientation_tolerance
         return distance < position_tolerance 
 
     def update_plot(self):
@@ -91,10 +86,10 @@ class LidarOdomVisualizer(Node):
             )
             ranges = np.array(self.scan_data.ranges)
 
-            # Filter out infinite readings
-            finite_indices = np.isfinite(ranges)
-            ranges = ranges[finite_indices]
-            angles = angles[finite_indices]
+            # Filter points under 24 meters
+            valid_indices = ranges < 24.0
+            ranges = ranges[valid_indices]
+            angles = angles[valid_indices]
 
             # Convert polar coordinates to Cartesian coordinates
             x = ranges * np.cos(angles)
@@ -168,34 +163,29 @@ class LidarOdomVisualizer(Node):
         self.fig.canvas.flush_events()
 
     def save_map(self):
-        # Define map resolution
-        resolution = 0.1  # meters per grid cell
+        # Create a plot for the LiDAR points
+        plt.figure(figsize=(8, 8))
+        
+        # Plot the LiDAR points
+        plt.scatter(self.lidar_points_x, self.lidar_points_y, s=1, color='black')
+        
+        # Set plot titles and labels (optional)
+        plt.title('LiDAR Map')
+        plt.xlabel('X Coordinate (meters)')
+        plt.ylabel('Y Coordinate (meters)')
+        plt.grid(True)
+        plt.axis('equal')  # Ensure equal scaling for X and Y axes
 
-        # Get the extents of the map
-        min_x = min(self.lidar_points_x)
-        max_x = max(self.lidar_points_x)
-        min_y = min(self.lidar_points_y)
-        max_y = max(self.lidar_points_y)
+        # Define the path to save the PNG image
+        save_path = os.path.expanduser('~/ros2_ws/src/rl_race/scripts/lidar_map.png')
+        
+        # Save the plot as a PNG file
+        plt.savefig(save_path)
+        
+        # Close the plot to avoid displaying it in some environments
+        plt.close()
 
-        width = int((max_x - min_x) / resolution) + 1
-        height = int((max_y - min_y) / resolution) + 1
-
-        # Create an empty occupancy grid
-        occupancy_grid = np.zeros((height, width))
-
-        # Mark the LiDAR points on the occupancy grid
-        for x, y in zip(self.lidar_points_x, self.lidar_points_y):
-            grid_x = int((x - min_x) / resolution)
-            grid_y = int((y - min_y) / resolution)
-            # Check if the indices are within bounds
-            if 0 <= grid_x < width and 0 <= grid_y < height:
-                occupancy_grid[grid_y, grid_x] = 1
-        # self.get_logger().info(f"Map dim {self.lidar_points_x} , {self.lidar_points_y}")
-        self.get_logger().info(f"Occupancy grid {occupancy_grid}")
-        # Save the occupancy grid as a numpy file in the current directory
-        save_path = 'occupancy_grid.npy'
-        np.save(save_path, occupancy_grid)
-        self.get_logger().info(f"Map saved at {save_path}")
+        self.get_logger().info(f"Map saved as {save_path}")
 
 def main(args=None):
     rclpy.init(args=args)
