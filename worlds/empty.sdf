@@ -20,7 +20,7 @@
             <static>true</static>
            <link name="link">
                 <collision name="collision">
-                
+                <pose>0 0 5 0 0 0</pose>
                     <geometry>
                         <plane>
                             <normal>0 0 1</normal>
@@ -30,7 +30,7 @@
                 </collision>
                 <visual name="visual">
                     <geometry>
-                        <pose>0 0 -1 0 0 0</pose>
+                        <pose>0 0 0 0 0 0</pose>
                         <!-- <plane>
                             <normal>0 0 1</normal>
                             <size>100 100</size>
